@@ -5,8 +5,9 @@ import {
   updateNotificationPrefsSchema,
   MAX_PAGINATION_LIMIT,
 } from '../utils/validation.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-export async function listNotifications(req: Request, res: Response) {
+export const listNotifications = asyncHandler(async (req: Request, res: Response) => {
   const parsed = listNotificationsQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     return res
@@ -33,15 +34,15 @@ export async function listNotifications(req: Request, res: Response) {
     data: notifications,
     meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
-}
+});
 
-export async function getUnreadCount(req: Request, res: Response) {
+export const getUnreadCount = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const count = await prisma.notification.count({ where: { userId, readAt: null } });
   return res.json({ count });
-}
+});
 
-export async function markNotificationRead(req: Request, res: Response) {
+export const markNotificationRead = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const notification = await prisma.notification.findUnique({
     where: { id: req.params.id },
@@ -55,30 +56,32 @@ export async function markNotificationRead(req: Request, res: Response) {
     data: { readAt: notification.readAt ?? new Date() },
   });
   return res.json(updated);
-}
+});
 
-export async function markAllRead(req: Request, res: Response) {
+export const markAllRead = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const result = await prisma.notification.updateMany({
     where: { userId, readAt: null },
     data: { readAt: new Date() },
   });
   return res.json({ updated: result.count });
-}
+});
 
-export async function updateNotificationPrefs(req: Request, res: Response) {
-  const parsed = updateNotificationPrefsSchema.safeParse(req.body);
-  if (!parsed.success) {
-    return res
-      .status(400)
-      .json({ error: 'invalid request body', details: parsed.error.flatten() });
-  }
+export const updateNotificationPrefs = asyncHandler(
+  async (req: Request, res: Response) => {
+    const parsed = updateNotificationPrefsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res
+        .status(400)
+        .json({ error: 'invalid request body', details: parsed.error.flatten() });
+    }
 
-  const user = await prisma.user.update({
-    where: { id: req.user!.userId },
-    data: parsed.data,
-    select: { id: true, email: true, webhookUrl: true },
-  });
+    const user = await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: parsed.data,
+      select: { id: true, email: true, webhookUrl: true },
+    });
 
-  return res.json({ preferences: user });
-}
+    return res.json({ preferences: user });
+  },
+);

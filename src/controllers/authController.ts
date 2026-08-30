@@ -8,10 +8,11 @@ import { generateChallenge, verifyStellarSignature } from '../services/stellarSe
 import { findOrCreateUser } from '../models/user.js';
 import { loginSchema } from '../utils/validation.js';
 import logger from '../utils/logger.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const CHALLENGE_KEY_PREFIX = 'login_challenge:';
 
-export async function getChallenge(req: Request, res: Response) {
+export const getChallenge = asyncHandler(async (req: Request, res: Response) => {
   const wallet = req.query.wallet as string;
   if (!wallet || wallet.length !== 56) {
     return res.status(400).json({ error: 'invalid wallet address' });
@@ -31,9 +32,9 @@ export async function getChallenge(req: Request, res: Response) {
     return res.status(503).json({ error: 'auth service unavailable' });
   }
   return res.json({ challenge });
-}
+});
 
-export async function login(req: Request, res: Response) {
+export const login = asyncHandler(async (req: Request, res: Response) => {
   const parsed = loginSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -77,13 +78,13 @@ export async function login(req: Request, res: Response) {
   } as SignOptions);
 
   return res.json({ token, user });
-}
+});
 
 export function verify(req: Request, res: Response) {
   return res.json({ user: req.user });
 }
 
-export async function logout(req: Request, res: Response) {
+export const logout = asyncHandler(async (req: Request, res: Response) => {
   try {
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) {
@@ -106,4 +107,4 @@ export async function logout(req: Request, res: Response) {
   } catch {
     return res.status(500).json({ error: 'logout failed' });
   }
-}
+});

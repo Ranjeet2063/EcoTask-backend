@@ -1,8 +1,8 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { rateLimiter } from '../services/rateLimitService.js';
 import config from '../config/default.js';
 import logger from '../utils/logger.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 export interface PerUserLimitOptions {
   windowMs: number;
@@ -18,7 +18,7 @@ export interface PerUserLimitOptions {
  * Redis. Can fail open or closed if Redis is unreachable.
  */
 export function perUserLimiter(options: PerUserLimitOptions) {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const clientId = options.keyFn
       ? options.keyFn(req)
       : req.user?.userId || req.ip || 'unknown';
@@ -34,7 +34,9 @@ export function perUserLimiter(options: PerUserLimitOptions) {
         res.setHeader('Retry-After', String(result.retryAfterSeconds));
         return res
           .status(429)
-          .json({ error: options.errorMessage || 'Too many requests, please try again later' });
+          .json({
+            error: options.errorMessage || 'Too many requests, please try again later',
+          });
       }
 
       next();
@@ -46,7 +48,7 @@ export function perUserLimiter(options: PerUserLimitOptions) {
       logger.warn('Per-user rate limiter unavailable, allowing request', { err });
       next();
     }
-  };
+  });
 }
 
 export const apiLimiter = perUserLimiter({

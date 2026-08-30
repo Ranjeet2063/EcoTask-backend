@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const CLAIM_DURATION_MS = 24 * 60 * 60 * 1000;
 
-export async function claimTask(req: Request, res: Response) {
+export const claimTask = asyncHandler(async (req: Request, res: Response) => {
   const { id: taskId } = req.params;
   const userId = req.user!.userId;
 
@@ -53,9 +54,9 @@ export async function claimTask(req: Request, res: Response) {
   });
 
   return res.status(result.status).json(result.body);
-}
+});
 
-export async function releaseClaim(req: Request, res: Response) {
+export const releaseClaim = asyncHandler(async (req: Request, res: Response) => {
   const { id: taskId } = req.params;
   const userId = req.user!.userId;
 
@@ -73,9 +74,9 @@ export async function releaseClaim(req: Request, res: Response) {
   });
 
   return res.status(204).send();
-}
+});
 
-export async function getTaskClaims(req: Request, res: Response) {
+export const getTaskClaims = asyncHandler(async (req: Request, res: Response) => {
   const { id: taskId } = req.params;
 
   const claims = await prisma.taskClaim.findMany({
@@ -88,4 +89,4 @@ export async function getTaskClaims(req: Request, res: Response) {
   });
 
   return res.json({ claims });
-}
+});

@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
 import { castValidatorVoteSchema } from '../utils/validation.js';
 import { listPendingReviews, castVote } from '../services/validatorService.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-export async function listValidators(_req: Request, res: Response) {
+export const listValidators = asyncHandler(async (_req: Request, res: Response) => {
   const validators = await prisma.user.findMany({
     where: { role: 'validator' },
     select: {
@@ -18,9 +19,9 @@ export async function listValidators(_req: Request, res: Response) {
   });
 
   return res.json({ data: validators, count: validators.length });
-}
+});
 
-export async function activateValidator(req: Request, res: Response) {
+export const activateValidator = asyncHandler(async (req: Request, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.userId },
     select: { id: true, role: true },
@@ -36,9 +37,9 @@ export async function activateValidator(req: Request, res: Response) {
   });
 
   return res.json(updated);
-}
+});
 
-export async function deactivateValidator(req: Request, res: Response) {
+export const deactivateValidator = asyncHandler(async (req: Request, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.userId },
     select: { id: true, role: true },
@@ -57,14 +58,14 @@ export async function deactivateValidator(req: Request, res: Response) {
   });
 
   return res.json(updated);
-}
+});
 
-export async function getMyReviews(req: Request, res: Response) {
+export const getMyReviews = asyncHandler(async (req: Request, res: Response) => {
   const reviews = await listPendingReviews(req.user!.userId);
   return res.json({ data: reviews, count: reviews.length });
-}
+});
 
-export async function submitReview(req: Request, res: Response) {
+export const submitReview = asyncHandler(async (req: Request, res: Response) => {
   const parsed = castValidatorVoteSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -86,4 +87,4 @@ export async function submitReview(req: Request, res: Response) {
     const conflict = /already cast|awaiting validator review/.test(message);
     return res.status(conflict ? 409 : 404).json({ error: message });
   }
-}
+});

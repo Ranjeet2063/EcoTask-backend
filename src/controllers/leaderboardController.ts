@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { formatRewardAmount } from '../utils/reward.js';
 
-export async function getLeaderboard(req: Request, res: Response) {
+export const getLeaderboard = asyncHandler(async (req: Request, res: Response) => {
   const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
   const period = (req.query.period as string) || 'all';
 
@@ -57,4 +58,4 @@ export async function getLeaderboard(req: Request, res: Response) {
   }));
 
   res.json({ leaderboard, period });
-}
+});

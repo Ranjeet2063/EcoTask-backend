@@ -6,9 +6,10 @@ import {
   listTasksQuerySchema,
 } from '../utils/validation.js';
 import { InvalidCursorError } from '../utils/cursor.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { formatRewardAmount } from '../utils/reward.js';
 
-export async function listTasks(req: Request, res: Response) {
+export const listTasks = asyncHandler(async (req: Request, res: Response) => {
   const parsed = listTasksQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     return res
@@ -40,17 +41,17 @@ export async function listTasks(req: Request, res: Response) {
     }
     throw err;
   }
-}
+});
 
-export async function getTask(req: Request, res: Response) {
+export const getTask = asyncHandler(async (req: Request, res: Response) => {
   const task = await taskModel.getTaskById(req.params.id);
   if (!task) {
     return res.status(404).json({ error: 'task not found' });
   }
   return res.json(formatTaskForApi(task));
-}
+});
 
-export async function createTask(req: Request, res: Response) {
+export const createTask = asyncHandler(async (req: Request, res: Response) => {
   const parsed = createTaskSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -67,9 +68,9 @@ export async function createTask(req: Request, res: Response) {
 
   const task = await taskModel.createTask(data);
   return res.status(201).json(formatTaskForApi(task));
-}
+});
 
-export async function updateTask(req: Request, res: Response) {
+export const updateTask = asyncHandler(async (req: Request, res: Response) => {
   const parsed = updateTaskSchema.safeParse(req.body);
   if (!parsed.success) {
     return res
@@ -93,9 +94,9 @@ export async function updateTask(req: Request, res: Response) {
 
   const task = await taskModel.updateTask(req.params.id, data);
   return res.json(formatTaskForApi(task));
-}
+});
 
-export async function deleteTask(req: Request, res: Response) {
+export const deleteTask = asyncHandler(async (req: Request, res: Response) => {
   const existing = await taskModel.getTaskById(req.params.id);
   if (!existing) {
     return res.status(404).json({ error: 'task not found' });
@@ -103,7 +104,7 @@ export async function deleteTask(req: Request, res: Response) {
 
   await taskModel.deleteTask(req.params.id);
   return res.status(204).send();
-}
+});
 
 function formatTaskForApi(
   task: Record<string, unknown> & { rewardAmountMicros?: bigint | null },

@@ -11,7 +11,12 @@ jest.mock('ioredis', () => {
       on() {
         return this;
       }
-      async eval(script: string, numKeys: number, key: string, windowMs: string | number) {
+      async eval(
+        script: string,
+        numKeys: number,
+        key: string,
+        windowMs: string | number,
+      ) {
         const entry = store.get(key) || { count: 0, ttlMs: 0 };
         entry.count += 1;
         if (entry.count === 1 || entry.ttlMs <= 0) {
@@ -43,8 +48,8 @@ jest.mock('../../src/utils/logger', () => ({
   default: { info: jest.fn(), error: jest.fn(), warn: jest.fn() },
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const clientStore = () =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (rateLimiter.getClient() as any)._store as Map<
     string,
     { count: number; ttlMs: number }

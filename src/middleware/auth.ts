@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import config from '../config/default.js';
 import { rateLimiter } from '../services/rateLimitService.js';
 import logger from '../utils/logger.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 // ---------------------------------------------------------------------------
 // Circuit breaker for the JWT denylist Redis check
@@ -99,8 +100,8 @@ const denylistCircuitBreaker = new DenylistCircuitBreaker();
 // Auth middleware factory
 // ---------------------------------------------------------------------------
 
-const createAuthMiddleware =
-  (strict: boolean) => async (req: Request, res: Response, next: NextFunction) => {
+const createAuthMiddleware = (strict: boolean) =>
+  asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const header = req.headers.authorization;
     if (!header?.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'missing authorization header' });
@@ -152,7 +153,7 @@ const createAuthMiddleware =
 
     req.user = payload;
     next();
-  };
+  });
 
 export const authMiddleware = createAuthMiddleware(false);
 export const strictAuthMiddleware = createAuthMiddleware(true);

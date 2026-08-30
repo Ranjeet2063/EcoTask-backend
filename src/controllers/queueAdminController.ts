@@ -8,6 +8,7 @@ import {
   listFailedJobs,
   retryFailedJob,
 } from '../services/queueAdminService.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const MAX_LIMIT = 100;
 
@@ -16,14 +17,14 @@ const MAX_LIMIT = 100;
  * the verification and reward-payout queues in a single call — the backlog
  * visibility surface for those pipelines.
  */
-export async function getQueueOverview(_req: Request, res: Response) {
+export const getQueueOverview = asyncHandler(async (_req: Request, res: Response) => {
   const data = await Promise.all(
     ADMIN_QUEUE_NAMES.map((queueName) => getQueueCounts(queueName)),
   );
   return res.json({ data });
-}
+});
 
-export async function getFailedJobs(req: Request, res: Response) {
+export const getFailedJobs = asyncHandler(async (req: Request, res: Response) => {
   const { queueName } = req.params;
   if (!isAdminQueueName(queueName)) {
     return res.status(400).json({ error: `unknown queue '${queueName}'` });
@@ -38,9 +39,9 @@ export async function getFailedJobs(req: Request, res: Response) {
     data: items,
     meta: { queue: queueName, limit, offset, total },
   });
-}
+});
 
-export async function retryJob(req: Request, res: Response) {
+export const retryJob = asyncHandler(async (req: Request, res: Response) => {
   const { queueName, jobId } = req.params;
   if (!isAdminQueueName(queueName)) {
     return res.status(400).json({ error: `unknown queue '${queueName}'` });
@@ -58,4 +59,4 @@ export async function retryJob(req: Request, res: Response) {
     }
     throw err;
   }
-}
+});

@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { formatRewardAmount } from '../utils/reward.js';
 
-export async function getPlatformAnalytics(_req: Request, res: Response) {
+export const getPlatformAnalytics = asyncHandler(async (_req: Request, res: Response) => {
   const [totalTasks, activeTasks, totalUsers, totalProofs, approvedStats] =
     await Promise.all([
       prisma.task.count(),
@@ -33,9 +34,9 @@ export async function getPlatformAnalytics(_req: Request, res: Response) {
     },
     timestamp: new Date().toISOString(),
   });
-}
+});
 
-export async function getTrends(req: Request, res: Response) {
+export const getTrends = asyncHandler(async (req: Request, res: Response) => {
   const requestedDays = parseInt(req.query.days as string) || 30;
   const days = Math.min(Math.max(requestedDays, 1), 365);
   const from = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -63,4 +64,4 @@ export async function getTrends(req: Request, res: Response) {
     })),
     timestamp: new Date().toISOString(),
   });
-}
+});
