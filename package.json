@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
-    "build": "tsc",
-    "start": "node dist/app.js",
+    "dev": "node init && ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "node init && tsc",
+    "start": "node init && node dist/app.js",
     "test": "jest --passWithNoTests",
     "test:coverage": "jest --passWithNoTests --coverage",
     "test:integration": "jest --passWithNoTests --testMatch '**/tests/integration/**/*.test.ts'",
